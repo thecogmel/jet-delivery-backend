@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -21,9 +22,13 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<User | undefined> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     return { ...user, password: undefined };
+  }
+
+  async findByUsername(username: string): Promise<User | undefined> {
+    return await this.prisma.user.findUnique({ where: { username } });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

@@ -13,3 +13,9 @@ interface UserPayload {
   iat?: number;
   exp?: number;
 }
+
+interface UserFromJwt {
+  id: number;
+  username: string;
+  name: string;
+}

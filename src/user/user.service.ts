@@ -1,4 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  Res,
+  Response,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,8 +25,11 @@ export class UserService {
     return { ...createUser, password: undefined };
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll(): Promise<User[]> {
+    const users = await this.prisma.user.findMany();
+    return users.map((user) => {
+      return { ...user, password: undefined };
+    });
   }
 
   async findOne(id: number): Promise<User | undefined> {
@@ -31,11 +41,24 @@ export class UserService {
     return await this.prisma.user.findUnique({ where: { username } });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const updateUser = await this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+    });
+    return { ...updateUser, password: undefined };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    try {
+      await this.prisma.user.delete({
+        where: {
+          id,
+        },
+      });
+      return;
+    } catch (error) {
+      throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
+    }
   }
 }

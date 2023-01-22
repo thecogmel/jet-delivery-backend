@@ -1,7 +1,14 @@
-import { User } from '../entities/user.entity';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { Exclude, Type } from 'class-transformer';
+import {
+  IsDefined,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 
-export class CreateUserDto extends User {
+export class CreateUserDto {
   @IsString()
   username: string;
 
@@ -15,4 +22,9 @@ export class CreateUserDto extends User {
 
   @IsString()
   phone?: string;
+
+  @IsDefined({ message: 'O endereço não pode ser vazio.' })
+  @ValidateNested()
+  @Type(() => CreateAddressDto)
+  address: CreateAddressDto;
 }

@@ -16,28 +16,59 @@ import { User } from './entities/user.entity';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
   async create(createUserDto: CreateUserDto) {
-    const data = {
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, 10),
-    };
+    const { address, ...user } = createUserDto;
+    user.password = await bcrypt.hash(user.password, 10);
 
-    const createUser = await this.prisma.user.create({ data });
-    return { ...createUser, password: undefined };
-  }
-
-  async findAll(): Promise<User[]> {
-    const users = await this.prisma.user.findMany();
-    return users.map((user) => {
-      return { ...user, password: undefined };
+    const createUser = await this.prisma.user.create({
+      data: {
+        ...user,
+        addresses: {
+          create: [address],
+        },
+      },
+      select: {
+        addresses: true,
+        id: true,
+        name: true,
+        password: false,
+        phone: true,
+        username: true,
+      },
     });
+
+    return createUser;
   }
 
-  async findOne(id: number): Promise<User | undefined> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    return { ...user, password: undefined };
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        addresses: true,
+        id: true,
+        name: true,
+        password: false,
+        phone: true,
+        username: true,
+      },
+    });
+    return users.map((user) => user);
   }
 
-  async findByUsername(username: string): Promise<User | undefined> {
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        addresses: true,
+        id: true,
+        name: true,
+        password: false,
+        phone: true,
+        username: true,
+      },
+    });
+    return user;
+  }
+
+  async findByUsername(username: string) {
     return await this.prisma.user.findUnique({ where: { username } });
   }
 
@@ -45,8 +76,17 @@ export class UserService {
     const updateUser = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
+      select: {
+        addresses: true,
+        id: true,
+        name: true,
+        password: false,
+        phone: true,
+        username: true,
+      },
     });
-    return { ...updateUser, password: undefined };
+
+    return updateUser;
   }
 
   async remove(id: number) {
